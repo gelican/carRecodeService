@@ -6,6 +6,13 @@ const path = require('path')
 
 class UserController extends Controller {
 
+    async index(ctx) {
+        const {} = ctx.request.body
+        let menu = ctx.model.Menu.findAndCountAll({
+            where: {}
+        })
+    }
+
     async login(ctx) {
         let {name, password} = ctx.request.body
         let user = await ctx.model.User.findOne({
