@@ -1,4 +1,4 @@
-const return200 = function (data) {
+const return200 = function (data = {}) {
   this.status = 200
   this.body = {
     code: 200,

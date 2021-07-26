@@ -7,117 +7,87 @@ const path = require('path')
 class UserController extends Controller {
 
     async index(ctx) {
-        const {} = ctx.request.body
-        let menu = ctx.model.Menu.findAndCountAll({
-            where: {}
+        const { } = ctx.request.body
+        let menu = await ctx.model.Menu.findAndCountAll({
+            order: [
+                ['parentId', 'ASC'],
+                ['sort', 'ASC'],
+            ],
+            include: [
+                {
+                    model: ctx.model.Menu,
+                    as: 'Parent',
+                },
+            ],
         })
+        ctx.return200(menu)
     }
 
-    async login(ctx) {
-        let {name, password} = ctx.request.body
-        let user = await ctx.model.User.findOne({
-            where: {
-                name
-            }
+    async info(ctx) {
+        let id = ctx.params.id
+        let res = await ctx.model.Menu.findByPk(id, {
+            include: [
+                {
+                    model: ctx.model.Menu,
+                    as: 'Parent',
+                },
+            ],
         })
-        if (user) {
-            if (user.password !== password) {
-                ctx.return400({}, '密码不正确')
-                return
-            }
+        if (res) {
+            ctx.return200(res)
         } else {
-            ctx.return400({}, '用户不存在')
-            return
+            ctx.return400({}, '菜单不存在')
         }
-        // 校验密码，相同则获取token
-        let created = Math.floor(Date.now() / 1000);
-        let cert = fs.readFileSync(path.join(__dirname, '../public/rsa_private_key.pem'));//私钥 可以自己生成
-        let token = jwt.sign({
-            data: {
-                name,
-            },
-            exp: created + 20,
-        }, cert, { algorithm: 'RS256' });
-        let myRedis = this.app.redis
-        myRedis.set('loginToken' + name, token)
-        ctx.return200({
-            id: user.id,
-            name: user.name,
-            nick: user.nick,
-            createdAt: user.createdAt,
-            token,
-        })
     }
 
-    async register(ctx) {
-        let {name, nick, password} = ctx.request.body
-        let user = await ctx.model.User.findOne({
+    async add(ctx) {
+        let { parentId, title, sort, path } = ctx.request.body
+        console.log(parentId, title, sort, path)
+        let res = await ctx.model.Menu.create({
+            parentId, title, sort, path
+        })
+        console.log(res.toJSON())
+        if (res.id) {
+            ctx.return200(res)
+        } else {
+            ctx.return400(res, '创建菜单失败')
+        }
+    }
+
+    async edit(ctx) {
+        let { id, parentId, title, sort, path } = ctx.request.body
+        let menu = await ctx.model.Menu.findByPk(id)
+        let res = await menu.update({
+            parentId,
+            title,
+            sort,
+            path,
+        })
+        if (res) {
+            ctx.return200(res)
+        } else {
+            ctx.return400(res, '修改菜单失败')
+        }
+    }
+
+    async delete(ctx) {
+        let id = ctx.params.id
+        let menu = await ctx.model.Menu.findByPk(id)
+        if (!menu) {
+            ctx.return400({}, '当前菜单不存在')
+            return
+        }
+        let res = await ctx.model.Menu.findAll({
             where: {
-                name
+                parentId: id,
             }
         })
-        if (user) {
-            ctx.return400({}, '该用户已存在')
+        if (res.length > 0) {
+            ctx.return400({}, '在删除当前菜单前请先删除对应子菜单')
             return
         }
-        let transaction
-        try {
-            transaction = await ctx.model.transaction()
-            console.log(transaction)
-            await ctx.model.User.create({
-                name,
-                password,
-                nick,
-            }, {transaction})
-            await transaction.commit()
-            ctx.return200({
-                name,
-                nick,
-            })
-        } catch (error) {
-            await transaction.rollback()
-            ctx.return400(error, '创建失败')
-        }
-    }
-
-    async show() {
-        const ctx = this.ctx;
-        ctx.body = await ctx.model.User.findByPk(toInt(ctx.params.id));
-    }
-
-    async create() {
-        const ctx = this.ctx;
-        const { name, age } = ctx.request.body;
-        const user = await ctx.model.User.create({ name, age });
-        ctx.status = 201;
-        ctx.body = user;
-    }
-
-    async update() {
-        const ctx = this.ctx;
-        const id = toInt(ctx.params.id);
-        const user = await ctx.model.User.findByPk(id);
-        if (!user) {
-            ctx.status = 404;
-            return;
-        }
-
-        const { name, age } = ctx.request.body;
-        await user.update({ name, age });
-        ctx.body = user;
-    }
-
-    async destroy() {
-        const ctx = this.ctx;
-        const id = toInt(ctx.params.id);
-        const user = await ctx.model.User.findByPk(id);
-        if (!user) {
-            ctx.status = 404;
-            return;
-        }
-
-        await user.destroy();
-        ctx.status = 200;
+        await menu.destroy()
+        ctx.return200()
     }
 }
 

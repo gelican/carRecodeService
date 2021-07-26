@@ -9,9 +9,14 @@ module.exports = app => {
         parentId: INTEGER,
         title: STRING(255),
         code: STRING(255),
-        index: INTEGER,
+        sort: INTEGER,
+        root: INTEGER,
+        path: STRING(255),
         remark: TEXT,
     });
+    model.associate = () => {
+        model.belongsTo(model, { as: 'Parent', foreignKey: 'parentId', through: null });
+    }
 
     return model;
 };

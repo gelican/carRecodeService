@@ -7,7 +7,7 @@ const path = require('path')
 class UserController extends Controller {
 
     async login(ctx) {
-        let {name, password} = ctx.request.body
+        let { name, password } = ctx.request.body
         let user = await ctx.model.User.findOne({
             where: {
                 name
@@ -29,7 +29,7 @@ class UserController extends Controller {
             data: {
                 name,
             },
-            exp: created + 20,
+            exp: created + 60 * 60 * 6,
         }, cert, { algorithm: 'RS256' });
         let myRedis = this.app.redis
         myRedis.set('loginToken' + name, token)
@@ -43,7 +43,7 @@ class UserController extends Controller {
     }
 
     async register(ctx) {
-        let {name, nick, password} = ctx.request.body
+        let { name, nick, password } = ctx.request.body
         let user = await ctx.model.User.findOne({
             where: {
                 name
@@ -61,7 +61,7 @@ class UserController extends Controller {
                 name,
                 password,
                 nick,
-            }, {transaction})
+            }, { transaction })
             await transaction.commit()
             ctx.return200({
                 name,

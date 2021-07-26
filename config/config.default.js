@@ -21,8 +21,6 @@ module.exports = appInfo => {
         enable: true,
         // 哪些请求不需要认证
         ignore: [
-            '/api/login',
-            '/api/user',
             '/api/user/login',
         ],
         secret: 'nuo$er&8bao',
