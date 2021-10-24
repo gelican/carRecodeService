@@ -73,6 +73,18 @@ class UserController extends Controller {
         }
     }
 
+    async list(ctx) {
+        const { status, isAdmin } = ctx.request.body
+        let res = await ctx.model.User.findAndCountAll({
+            include: [
+                {
+                    model: ctx.model.Role,
+                },
+            ]
+        })
+        ctx.return200(res)
+    }
+
     async show() {
         const ctx = this.ctx;
         ctx.body = await ctx.model.User.findByPk(toInt(ctx.params.id));

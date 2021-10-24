@@ -3,13 +3,11 @@
 module.exports = app => {
     const { STRING, INTEGER, DATE, TEXT } = app.Sequelize;
 
-    const model = app.model.define('role', {
+    const model = app.model.define('user_role', {
         id: { type: INTEGER, primaryKey: true, autoIncrement: true },
-        name: STRING(255),
-        status: INTEGER,
+        userId: INTEGER,
+        roleId: INTEGER,
     });
-    model.associate = () => {
-    }
 
     return model;
 };
