@@ -82,6 +82,13 @@ class UserController extends Controller {
                 },
             ]
         })
+        res.rows.forEach(row => {
+            row.dataValues.role = []
+            row.roles.forEach(role => {
+                row.dataValues.role.push(role.name)
+            })
+        })
+        console.log(res.rows)
         ctx.return200(res)
     }
 

@@ -9,7 +9,6 @@ module.exports = app => {
         name: STRING(255),
         nick: STRING(255),
         password: STRING(255),
-        isAdmin: INTEGER,
         status: INTEGER,
     });
     model.associate = () => {
